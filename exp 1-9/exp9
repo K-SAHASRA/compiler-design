@@ -1,0 +1,81 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+// Define Node structure
+typedef struct Node {
+    char data;
+    struct Node *left, *right;
+} Node;
+
+// Function to create a new Node
+Node* newNode(char data) {
+    Node* node = (Node*)malloc(sizeof(Node));
+    node->data = data;
+    node->left = node->right = NULL;
+    return node;
+}
+
+// Function to check if a character is an operand
+bool isOperand(char c) {
+    return (c >= '0' && c <= '9');
+}
+
+// Function to build a syntax tree from a given postfix expression
+Node* buildSyntaxTree(char* postfix) {
+    Node* stack[100];
+    int top = -1;
+
+    for (int i = 0; postfix[i]; i++) {
+        char c = postfix[i];
+
+        if (isOperand(c)) {
+            stack[++top] = newNode(c);
+        } else {
+            Node* right = stack[top--];
+            Node* left = stack[top--];
+            Node* node = newNode(c);
+            node->left = left;
+            node->right = right;
+            stack[++top] = node;
+        }
+    }
+    return stack[top];
+}
+
+// Function to traverse the syntax tree and perform arithmetic operations
+int evaluateSyntaxTree(Node* root) {
+    if (root == NULL)
+        return 0;
+
+    if (root->left == NULL && root->right == NULL)
+        return root->data - '0';
+
+    int leftValue = evaluateSyntaxTree(root->left);
+    int rightValue = evaluateSyntaxTree(root->right);
+
+    switch (root->data) {
+        case '+':
+            return leftValue + rightValue;
+        case '-':
+            return leftValue - rightValue;
+        case '*':
+            return leftValue * rightValue;
+        case '/':
+            if (rightValue == 0) {
+                printf("Division by zero\n");
+                exit(1);
+            }
+            return leftValue / rightValue;
+        default:
+            return 0;
+    }
+}
+
+int main() {
+    char postfixExpression[] = "52+3*";
+    Node* root = buildSyntaxTree(postfixExpression);
+    int result = evaluateSyntaxTree(root);
+    printf("Result of evaluation: %d\n", result);
+    return 0;
+}
